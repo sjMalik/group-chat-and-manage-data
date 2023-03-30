@@ -1,4 +1,8 @@
 {
     "host": "0.0.0.0",
-    "port": 3000
+    "port": 3000,
+    "jwt": {
+        "secret": "DWF2CZVI-CNTUG893-9SSP05XJ-OR76F19L",
+        "ttl": "1 day"
+    }
 }
