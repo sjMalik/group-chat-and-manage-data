@@ -112,6 +112,34 @@ router.route('/:groupid')
         }
     });
 
+router.post('/:groupid/add_member', async (req, res)=> {
+    let userid = req.body.user_id;
 
+    try{
+        await knex('group_users')
+            .insert({
+                group_id: req.params.groupid,
+                user_id: userid
+            });
+        
+        return res.status(200).json({
+            message: "Member added in group"
+        }).end();
+    }catch(e){
+        debug(e);
+        return res.status(500).json(e).end();
+    }
+});
 
-    module.exports = router;
+router.get('/:groupid/users', async (req, res)=> {
+    let rows = await knex.select('u.id', 'u.email', 'u.first_name', 'u.last_name', 'u.role')
+        .from('group_users as gu')
+        .innerJoin('users as u', 'u.id', 'gu.user_id')
+        .where('gu.group_id', req.params.groupid);
+
+    return res.status(200).json({
+        users: rows
+    }).end();
+});
+
+module.exports = router;

@@ -4,5 +4,9 @@
     "jwt": {
         "secret": "DWF2CZVI-CNTUG893-9SSP05XJ-OR76F19L",
         "ttl": "1 day"
+    },
+    "sendGrid": {
+        "API_KEY": "",
+        "noReplyMail": ""
     }
 }

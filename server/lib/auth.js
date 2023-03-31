@@ -7,6 +7,15 @@ const   config  = require("../../config"),
         knex    = require("../../db/knex");
 
 
+module.exports.encode = function encode(email, password){
+    let salt = bcrypt.genSaltSync(10);
+    let emailHash = crypto.createHash('sha256').update(email).digest('hex');
+    let passwordHash = crypto.createHash('sha256').update(password).digest('hex');
+    let toBeHashed = [emailHash, passwordHash].join('+');
+    let hash = bcrypt.hashSync(toBeHashed, salt);
+    return hash;
+}
+
 function isSame(encoded, email, password) {
     let emailHash = crypto.createHash('sha256').update(email).digest('hex');
     let passwordHash = crypto.createHash('sha256').update(password).digest('hex');
@@ -79,10 +88,9 @@ module.exports.isLoggedIn = (req, res, callback) => {
         if(err) return callback(false);
         debug(decoded);
 
-        let query = knex('users')
-        .join('org_user', 'org_user.user_id', 'users.id')
-        .join('org', 'org.id', 'org_user.org_id')
-        .where('users.email', decoded.email);
+        let query = await knex.select('u.id', 'u.email', 'u.first_name', 'u.last_name', 'u.role')
+        .from('users as u')
+        .where('u.email', decoded.email);
 
         req.user = query[0];
         callback(true);
