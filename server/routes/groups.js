@@ -14,15 +14,20 @@ router.param('groupid', async (req, res, next, groupid)=> {
     if (!number.test(groupid)) return next('route');
 
     req.groupid = parseInt(groupid);
-    let rows = await knex('chat_groups')
+    let rows = await knex('chat_groups as g')
         .select('*')
-        .where('groups.id', groupid);
+        .where('g.id', groupid);
 
     req.group = rows[0];
 
     next();
 });
 
+/**
+ * Get the List of Groups
+ * Search the group fully or partially by group's name
+ * Create a new group
+ */
 router.route('/')
     .get(async (req, res) => {
         let page = numeral(req.query.page || 1).value();
@@ -32,6 +37,12 @@ router.route('/')
         let limit = perPage;
 
         let query = knex.select('g.id', 'g.name', 'g.created_at').from('chat_groups as g').groupBy('g.id');
+
+        if(req.query.search){
+            debug(req.query.search)
+            query = query.where(q=> q.where('g.name', 'ilike', `%${req.query.search}%`));
+        }
+
         let total = await query.clone().count();
         debug(total);
         let rows = await query.limit(limit).offset(offset);
@@ -44,7 +55,8 @@ router.route('/')
     .post(async (req, res)=> {
         let group = req.body;
 
-        let group_id = await knex('chat_groups')
+        try{
+            let group_id = await knex('chat_groups')
             .insert({
                 name: group.name
             }).returning('id');
@@ -52,6 +64,54 @@ router.route('/')
         return res.status(200).send({
             id: group_id[0]
         })
+        }catch(e){
+            debug(e);
+            return res.status(500).json(e);
+        }
+    });
+
+/**
+ * Get a particular group by group id
+ * Update a group
+ * Delete a group
+ */
+router.route('/:groupid')
+    .get(async (req, res)=> {
+        return res.status(200).send({
+            ...req.group
+        });
     })
+    .patch(async (req, res)=> {
+        let name = req.body.name;
+
+        try{
+            await knex.table('chat_groups')
+                .update({
+                    name: name
+                }).where('id', req.group.id);
+            
+            return res.status(200).end();
+        }catch(e){
+            debug(e);
+            return res.status(500).json(e);
+        }
+    })
+    .delete(async (req, res)=> {
+        try{
+            await knex.transaction(async tx=> {
+                await knex('group_users').delete().where('group_id', req.group.id);
+                await knex('chat_groups').delete().where('id', req.group.id);
+
+                await tx.commit();
+                res.status(200).end();
+            })
+        }catch(e){
+            debug(e);
+            await tx.rollback();
+            res.status(500).json(e);
+        }
+    });
+
+
 
     module.exports = router;
