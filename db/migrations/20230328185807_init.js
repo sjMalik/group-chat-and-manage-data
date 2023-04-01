@@ -32,7 +32,14 @@ exports.up = async function(knex) {
       table.string('message').nullable(),
       table.json('message_props'),
       table.integer('group_id').references('id').inTable('chat_groups'),
-      table.integer('user_id').references('id').inTable('users'),
+      table.integer('created_by').references('id').inTable('users'),
+      table.timestamp('created_at').defaultTo(knex.fn.now())
+    }),
+
+    knex.schema.createTable('chat_likes', (table)=> {
+      table.increments('id').primary().unsigned(),
+      table.string('chat_id').references('id').inTable('chats'),
+      table.integer('liked_by').references('id').inTable('users'),
       table.timestamp('created_at').defaultTo(knex.fn.now())
     })
   ])

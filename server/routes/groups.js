@@ -137,7 +137,7 @@ router.post('/:groupid/add_member', async (req, res)=> {
 router.get('/:groupid/users', async (req, res)=> {
     let rows = await knex.select('u.id', 'u.email', 'u.first_name', 'u.last_name', 'u.role')
         .from('group_users as gu')
-        .innerJoin('users as u', 'u.id', 'gu.user_id')
+        .innerJoin('users as u', 'u.id', 'gu.created_by')
         .where('gu.group_id', req.params.groupid);
 
     return res.status(200).json({
@@ -156,7 +156,7 @@ router.post('/:groupid/chats', async (req, res)=> {
             .insert({
                 message: messages.text,
                 message_props: messages.message_props,
-                user_id: req.user.id,
+                created_by: req.user.id,
                 group_id: req.params.groupid
             });
 
@@ -166,5 +166,62 @@ router.post('/:groupid/chats', async (req, res)=> {
         return res.status(500).json(e).end();
     }
 });
+
+/**
+ * Get Group Chats with likes
+ */
+router.get('/:groupid/chats', async(req, res)=> {
+    let rows = await knex.select(knex.raw(`
+        c.id,
+        c.message,
+        c.message_props,
+        c.created_by,
+        c.created_at,
+        array_agg(json_build_object(
+            'id', cl.id,
+            'liked_by', cl.liked_by,
+            'liked_at', cl.created_at
+        )) as chat_likes`))
+        .from('chats as c')
+        .leftJoin('chat_likes as cl', 'c.id', 'cl.chat_id')
+        .where('c.group_id', req.params.groupid);
+
+    return res.status(200).json({
+        chats: rows
+    }).end();
+})
+
+/**
+ * Like/Dislike chat
+ */
+router.route('/:groupid/chats/:chatid')
+    .post(async (req, res)=> {
+        let messages = req.body;
+
+        try{
+            await knex('chat_likes')
+                .insert({
+                    chat_id: req.params.chatid,
+                    liked_by: req.user.id
+                });
+
+            return res.status(200).end();
+        }catch(e){
+            debug(e);
+            return res.status(500).json(e).end();
+        }
+    })
+    .delete(async (req, res)=> {
+        try{
+            await knex('chat_likes')
+                .delete()
+                .where('id', req.params.chatid);
+
+            return res.status(200).end();
+        }catch(e){
+            debug(e);
+            return res.status(500).json(e).end();
+        }
+    })
 
 module.exports = router;
