@@ -131,6 +131,9 @@ router.post('/:groupid/add_member', async (req, res)=> {
     }
 });
 
+/**
+ * Get all users in a group
+ */
 router.get('/:groupid/users', async (req, res)=> {
     let rows = await knex.select('u.id', 'u.email', 'u.first_name', 'u.last_name', 'u.role')
         .from('group_users as gu')
@@ -140,6 +143,28 @@ router.get('/:groupid/users', async (req, res)=> {
     return res.status(200).json({
         users: rows
     }).end();
+});
+
+/**
+ * Store chats in group
+ */
+router.post('/:groupid/chats', async (req, res)=> {
+    let messages = req.body;
+
+    try{
+        await knex('chats')
+            .insert({
+                message: messages.text,
+                message_props: messages.message_props,
+                user_id: req.user.id,
+                group_id: req.params.groupid
+            });
+
+        return res.status(200).end();
+    }catch(e){
+        debug(e);
+        return res.status(500).json(e).end();
+    }
 });
 
 module.exports = router;

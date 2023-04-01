@@ -10,6 +10,9 @@ const   knex        = require('../../db/knex'),
 const router = express.Router();
 router.use(middleware.isAuthenticated);
 
+/**
+ * Create a new user by Admin
+ */
 router.post('/users', async (req, res)=> {
     if(req.user.role !== 'ADMIN'){
         return res.status(403).json({
@@ -40,6 +43,9 @@ router.post('/users', async (req, res)=> {
     }
 });
 
+/**
+ * Update user by Admin
+ */
 router.patch('/users/:userid', async (req, res)=> {
     if(req.user.role !== 'ADMIN'){
         return res.status(403).json({
