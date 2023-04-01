@@ -24,18 +24,18 @@ router.post('/users', async (req, res)=> {
     try{
         let randomPassword = Math.random().toString(36).slice(-8);
         debug(randomPassword);
-        let user_id = await knex('users')
+        let newUserId = await knex('users')
             .insert({
                 email: user.email,
                 password: auth.encode(user.email, randomPassword),
                 first_name: user.first_name,
                 last_name: user.last_name,
                 role: 'MEMBER'
-            });
+            }).returning('id');
         email.sendAccountCreationMail(user.email, user.first_name, user.last_name, randomPassword);
         
         return res.status(200).json({
-            message: 'User created'
+            user: newUserId[0]
         }).end();
     }catch(e){
         debug(e);

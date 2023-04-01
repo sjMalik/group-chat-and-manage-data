@@ -93,7 +93,10 @@ io.on('connection', async (socket) =>  {
 
 app.listen(port, host, () => {
     debug("Server started on %s:%s", host, port);
-})
+});
+
+// For Testing
+module.exports = app;
 
 
 

@@ -62,7 +62,7 @@ router.route('/')
             }).returning('id');
 
         return res.status(200).send({
-            id: group_id[0]
+            group: group_id[0]
         })
         }catch(e){
             debug(e);
@@ -152,15 +152,17 @@ router.post('/:groupid/chats', async (req, res)=> {
     let messages = req.body;
 
     try{
-        await knex('chats')
+        let chatid = await knex('chats')
             .insert({
                 message: messages.text,
                 message_props: messages.message_props,
                 created_by: req.user.id,
                 group_id: req.params.groupid
-            });
+            }).returning('id');
 
-        return res.status(200).end();
+        return res.status(200).json({
+            chat: chatid[0]
+        }).end();
     }catch(e){
         debug(e);
         return res.status(500).json(e).end();
@@ -184,6 +186,7 @@ router.get('/:groupid/chats', async(req, res)=> {
         )) as chat_likes`))
         .from('chats as c')
         .leftJoin('chat_likes as cl', 'c.id', 'cl.chat_id')
+        .groupBy('c.id')
         .where('c.group_id', req.params.groupid);
 
     return res.status(200).json({
@@ -192,36 +195,40 @@ router.get('/:groupid/chats', async(req, res)=> {
 })
 
 /**
- * Like/Dislike chat
+ * Like chat
  */
-router.route('/:groupid/chats/:chatid')
-    .post(async (req, res)=> {
-        let messages = req.body;
-
+router.post('/:groupid/chats/:chatid/like', async (req, res)=> {
         try{
-            await knex('chat_likes')
+            let chat_like_id = await knex('chat_likes')
                 .insert({
                     chat_id: req.params.chatid,
                     liked_by: req.user.id
-                });
+                }).returning('id');
 
-            return res.status(200).end();
+            return res.status(200).json({
+                chat_like: chat_like_id[0]
+            }).end();
         }catch(e){
             debug(e);
             return res.status(500).json(e).end();
         }
-    })
-    .delete(async (req, res)=> {
+});
+
+/**
+ * Dislike chat
+ */
+router.post('/:groupid/chats/:chatid/dislike', async (req, res)=> {
         try{
             await knex('chat_likes')
                 .delete()
-                .where('id', req.params.chatid);
+                .where('id', req.params.chatid)
+                .andWhere('liked_by', req.user.id);
 
             return res.status(200).end();
         }catch(e){
             debug(e);
             return res.status(500).json(e).end();
         }
-    })
+});
 
 module.exports = router;

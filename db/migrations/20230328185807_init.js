@@ -38,7 +38,7 @@ exports.up = async function(knex) {
 
     knex.schema.createTable('chat_likes', (table)=> {
       table.increments('id').primary().unsigned(),
-      table.string('chat_id').references('id').inTable('chats'),
+      table.integer('chat_id').references('id').inTable('chats'),
       table.integer('liked_by').references('id').inTable('users'),
       table.timestamp('created_at').defaultTo(knex.fn.now())
     })

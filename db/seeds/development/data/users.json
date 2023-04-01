@@ -5,5 +5,19 @@
         "first_name": "John",
         "last_name": "Doe",
         "role": "ADMIN"
+    },
+    {
+        "email": "harry@gmail.com",
+        "password": "$2a$08$uRNfN5uvP0ImG.TKlMLUG.kY9xtdNtvkrJWT6U9kDdqDR3TS1I7/m",
+        "first_name": "Harry",
+        "last_name": "Potter",
+        "role": "MEMBER"
+    },
+    {
+        "email": "ron@gmail.com",
+        "password": "$2a$08$uRNfN5uvP0ImG.TKlMLUG.kY9xtdNtvkrJWT6U9kDdqDR3TS1I7/m",
+        "first_name": "Ron",
+        "last_name": "Weasley",
+        "role": "MEMBER"
     }
 ]
