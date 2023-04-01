@@ -20,7 +20,7 @@ Database Name: `group_chat`
 `npm start`
 
 ## Testing application by running test script
-`npm run test`
+`npm test`
 
 
 ## List of APIs
